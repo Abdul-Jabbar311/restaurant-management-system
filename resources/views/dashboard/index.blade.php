@@ -99,7 +99,7 @@
         <div class="absolute -top-10 -right-10 w-56 h-56 bg-white/10 rounded-full rd-float" aria-hidden="true"></div>
         <div class="absolute bottom-0 left-1/3 w-32 h-32 bg-white/10 rounded-full rd-float" style="animation-delay:1.5s" aria-hidden="true"></div>
 
-        <div class="relative grid grid-cols-1 lg:grid-cols-5 items-center lg:h-81">
+        <div class="relative grid grid-cols-1 lg:grid-cols-5 items-center lg:min-h-90">
 
             <div class="lg:col-span-3 p-8 sm:p-10 lg:p-12">
                 <span class="inline-flex items-center gap-2 text-xs font-semibold tracking-wide uppercase bg-white/20 text-white px-3 py-1 rounded-full backdrop-blur-sm">
@@ -127,20 +127,22 @@
                 </div>
             </div>
 
-           <div class="lg:col-span-2 h-64 lg:h-full relative overflow-hidden">
-    <img
-        src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80"
-        alt="Freshly plated restaurant dish"
-        loading="lazy"
-        onerror="this.style.display='none'"
-        class="absolute inset-0 w-full h-full object-cover lg:rounded-r-3xl opacity-95"
-    >
+            <div class="lg:col-span-2 h-64 lg:h-90 relative overflow-hidden lg:rounded-r-3xl">
 
-    <div
-        class="absolute inset-0 bg-linear-to-l from-transparent to-orange-500/40 lg:rounded-r-3xl"
-        aria-hidden="true">
-    </div>
-</div>
+                <img
+                    src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80"
+                    alt="Freshly plated restaurant dish"
+                    loading="lazy"
+                    onerror="this.style.display='none'"
+                    class="absolute inset-0 w-full h-full object-cover opacity-95"
+                >
+
+                <div
+                    class="absolute inset-0 bg-linear-to-l from-transparent to-orange-500/40"
+                    aria-hidden="true">
+                </div>
+
+            </div>
 
         </div>
     </div>
