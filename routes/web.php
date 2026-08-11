@@ -36,6 +36,8 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\ContactController;
 
+use App\Http\Controllers\WebsiteContentController;
+use App\Http\Controllers\EditableContentController;
 
 
 /*
@@ -59,9 +61,10 @@ Route::get('/category/{category}', [FrontendController::class, 'category'])
 Route::get('/menu-item/{menuItem}', [FrontendController::class, 'show'])
     ->name('menu.show');
 
+
 /*
 |--------------------------------------------------------------------------
-| Cart
+| CART
 |--------------------------------------------------------------------------
 */
 
@@ -79,18 +82,21 @@ Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])
 
 Route::post('/cart/clear', [CartController::class, 'clear'])
     ->name('cart.clear');
-    /*
+
+
+/*
 |--------------------------------------------------------------------------
-| Coupon
+| COUPON
 |--------------------------------------------------------------------------
 */
 
 Route::post('/apply-coupon', [CartController::class, 'applyCoupon'])
     ->name('coupon.apply');
 
+
 /*
 |--------------------------------------------------------------------------
-| Checkout / Orders
+| CHECKOUT / ORDERS
 |--------------------------------------------------------------------------
 */
 
@@ -103,9 +109,10 @@ Route::post('/place-order', [FrontendController::class, 'placeOrder'])
 Route::get('/track-order/{order}', [FrontendController::class, 'trackOrder'])
     ->name('track.order');
 
+
 /*
 |--------------------------------------------------------------------------
-| Reservation
+| RESERVATION
 |--------------------------------------------------------------------------
 */
 
@@ -115,9 +122,10 @@ Route::get('/reservation', [FrontendController::class, 'reservation'])
 Route::post('/reservation', [FrontendController::class, 'storeReservation'])
     ->name('reservation.store');
 
+
 /*
 |--------------------------------------------------------------------------
-| Static Pages
+| STATIC PAGES
 |--------------------------------------------------------------------------
 */
 
@@ -130,9 +138,10 @@ Route::get('/contact', [FrontendController::class, 'contact'])
 Route::post('/contact', [FrontendController::class, 'storeContact'])
     ->name('contact.store');
 
+
 /*
 |--------------------------------------------------------------------------
-| Feedback / Reviews
+| FEEDBACK / REVIEWS
 |--------------------------------------------------------------------------
 */
 
@@ -141,6 +150,7 @@ Route::get('/reviews', [FrontendController::class, 'feedback'])
 
 Route::post('/reviews', [FrontendController::class, 'storeFeedback'])
     ->name('feedback.store');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -153,7 +163,9 @@ Route::get('/login', [AuthController::class, 'showLogin'])
 
 Route::post('/login', [AuthController::class, 'login'])
     ->name('login.submit');
-    /*
+
+
+/*
 |--------------------------------------------------------------------------
 | ADMIN PANEL
 |--------------------------------------------------------------------------
@@ -166,6 +178,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])
         ->name('logout');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -192,6 +205,7 @@ Route::middleware('auth')->group(function () {
 
     });
 
+
     /*
     |--------------------------------------------------------------------------
     | ADMIN ONLY
@@ -207,8 +221,38 @@ Route::middleware('auth')->group(function () {
     Route::resource('settings', SettingController::class)
         ->middleware('role:Admin');
 
-    
-            /*
+    Route::put(
+        '/website-content/{content}',
+        [WebsiteContentController::class, 'update']
+    )
+        ->name('website-content.update')
+        ->middleware('role:Admin');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDITABLE CONTENT - ADMIN ONLY
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware(['auth', 'role:Admin'])->group(function () {
+
+        Route::get(
+            '/editable-content/{page}/{key}/edit',
+            [EditableContentController::class, 'edit']
+        )
+            ->name('editable-content.edit');
+
+        Route::post(
+            '/editable-content/{page}/{key}',
+            [EditableContentController::class, 'update']
+        )
+            ->name('editable-content.update');
+
+    });
+
+
+    /*
     |--------------------------------------------------------------------------
     | ADMIN + MANAGER
     |--------------------------------------------------------------------------
@@ -241,6 +285,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('activity-logs', ActivityLogController::class)
         ->middleware('role:Admin,Manager');
 
+
     /*
     |--------------------------------------------------------------------------
     | ADMIN + MANAGER + WAITER
@@ -253,16 +298,17 @@ Route::middleware('auth')->group(function () {
     Route::resource('orders', OrderController::class)
         ->middleware('role:Admin,Manager,Waiter');
 
-   
-    
-        Route::patch('/orders/{order}/status',
-    [OrderController::class, 'updateStatus'])
-    ->name('orders.updateStatus')
-    ->middleware('role:Admin,Manager,Waiter');
+    Route::patch(
+        '/orders/{order}/status',
+        [OrderController::class, 'updateStatus']
+    )
+        ->name('orders.updateStatus')
+        ->middleware('role:Admin,Manager,Waiter');
 
     Route::resource('reservations', ReservationController::class)
         ->middleware('role:Admin,Manager,Waiter');
-            Route::resource('restaurant-tables', RestaurantTableController::class)
+
+    Route::resource('restaurant-tables', RestaurantTableController::class)
         ->middleware('role:Admin,Manager,Waiter');
 
     Route::resource('coupons', CouponController::class)
@@ -270,6 +316,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('feedback', FeedbackController::class)
         ->middleware('role:Admin,Manager,Waiter');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -283,7 +330,9 @@ Route::middleware('auth')->group(function () {
     Route::patch(
         '/kitchen-orders/{order}/status',
         [KitchenOrderController::class, 'updateStatus']
-    )->name('kitchen-orders.updateStatus');
+    )
+        ->name('kitchen-orders.updateStatus');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -293,44 +342,138 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('contacts', ContactController::class)
         ->middleware('role:Admin,Manager');
-            Route::get('/my-orders', [FrontendController::class, 'myOrders'])
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MY ORDERS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/my-orders', [FrontendController::class, 'myOrders'])
         ->name('my.orders');
 
     Route::post('/my-orders/search', [FrontendController::class, 'searchOrders'])
         ->name('my.orders.search');
 
-        Route::get('/waiter/orders', [OrderController::class, 'waiterOrders'])
-    ->name('waiter.orders')
-    ->middleware('role:Admin,Manager,Waiter');
-     Route::patch('/orders/{order}/deliver', [OrderController::class, 'deliverOrder'])
-    ->name('orders.deliver')
-    ->middleware('role:Admin,Manager,Waiter');
+
+    /*
+    |--------------------------------------------------------------------------
+    | WAITER ORDERS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/waiter/orders', [OrderController::class, 'waiterOrders'])
+        ->name('waiter.orders')
+        ->middleware('role:Admin,Manager,Waiter');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELIVER ORDERS
+    |--------------------------------------------------------------------------
+    */
 
     Route::patch(
-    '/restaurant-tables/{restaurantTable}/available',
-    [RestaurantTableController::class, 'makeAvailable']
-)->name('restaurant-tables.available');
+        '/orders/{order}/deliver',
+        [OrderController::class, 'deliverOrder']
+    )
+        ->name('orders.deliver')
+        ->middleware('role:Admin,Manager,Waiter');
 
 
-Route::patch(
-    '/restaurant-tables/{table}/available',
-    [RestaurantTableController::class, 'markAvailable']
-)->name('restaurant-tables.available');
+    /*
+    |--------------------------------------------------------------------------
+    | RESTAURANT TABLE AVAILABILITY
+    |--------------------------------------------------------------------------
+    */
 
-Route::get('/waiter-dashboard', [FrontendController::class, 'waiter'])
-    ->middleware('auth')
-    ->name('waiter.dashboard');
+    Route::patch(
+        '/restaurant-tables/{restaurantTable}/available',
+        [RestaurantTableController::class, 'makeAvailable']
+    )
+        ->name('restaurant-tables.available');
 
-    Route::patch('/orders/{order}/deliver', [OrderController::class, 'deliver'])
-    ->name('orders.deliver');
+    Route::patch(
+        '/restaurant-tables/{table}/available',
+        [RestaurantTableController::class, 'markAvailable']
+    )
+        ->name('restaurant-tables.available');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | WAITER DASHBOARD
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/waiter-dashboard', [FrontendController::class, 'waiter'])
+        ->middleware('auth')
+        ->name('waiter.dashboard');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELIVER ORDER
+    |--------------------------------------------------------------------------
+    */
+
+    Route::patch(
+        '/orders/{order}/deliver',
+        [OrderController::class, 'deliver']
+    )
+        ->name('orders.deliver');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | NOTIFICATIONS
+    |--------------------------------------------------------------------------
+    */
 
     Route::middleware(['auth', 'role:Admin,Waiter'])->group(function () {
-    Route::resource('notifications', NotificationController::class);
-});
-Route::patch('/orders/{order}/pay', [OrderController::class, 'markAsPaid'])
-    ->name('orders.pay');
-    Route::patch('/orders/{order}/paid', [OrderController::class, 'markPaid'])
-    ->name('orders.mark-paid');
+
+        Route::resource('notifications', NotificationController::class);
+
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PAYMENTS
+    |--------------------------------------------------------------------------
+    */
+
+    Route::patch(
+        '/orders/{order}/pay',
+        [OrderController::class, 'markAsPaid']
+    )
+        ->name('orders.pay');
+
+    Route::patch(
+        '/orders/{order}/paid',
+        [OrderController::class, 'markPaid']
+    )
+        ->name('orders.mark-paid');
+
+
+    Route::middleware(['auth'])->group(function () {
+
+        Route::get(
+            '/editable-content/{page}/{key}/edit',
+            [EditableContentController::class, 'edit']
+        )
+            ->name('editable-content.edit');
+
+        Route::post(
+            '/editable-content/{page}/{key}',
+            [EditableContentController::class, 'update']
+        )
+            ->name('editable-content.update');
+
+    });
+
+
     /*
     |--------------------------------------------------------------------------
     | IMPORTANT
@@ -340,5 +483,8 @@ Route::patch('/orders/{order}/pay', [OrderController::class, 'markAsPaid'])
     | It should exist ONLY outside the auth middleware
     | near the top of this file.
     |
+    |--------------------------------------------------------------------------
     */
-    });
+
+});
+

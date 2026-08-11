@@ -4,283 +4,253 @@
 
 @section('content')
 
-
 <!-- Hero -->
 
 <section class="bg-linear-to-r from-red-600 to-orange-500 text-white py-16">
 
-    <div class="max-w-7xl mx-auto px-6">
 
-        <h1 class="text-5xl font-bold mb-3">
-            Our Menu
-        </h1>
+<div class="max-w-7xl mx-auto px-6">
 
-        <p class="text-lg text-red-100">
-            Freshly prepared dishes made with premium ingredients.
-        </p>
+    <h1 class="text-5xl font-bold mb-3">
+        @editable(
+            'menu',
+            'page_title',
+            'Our Menu'
+        )
+    </h1>
 
-    </div>
+    <p class="text-lg text-red-100">
+        @editable(
+            'menu',
+            'page_description',
+            'Freshly prepared dishes made with premium ingredients.'
+        )
+    </p>
+
+</div>
+
 
 </section>
-
-
 
 <!-- Search -->
 
 <section class="bg-white shadow">
 
-    <div class="max-w-7xl mx-auto px-6 py-6">
 
-        <form method="GET"
-              action="{{ route('menu') }}">
+<div class="max-w-7xl mx-auto px-6 py-6">
 
-            <div class="flex gap-4">
+    <form method="GET"
+          action="{{ route('menu') }}">
 
-                <input
-                    type="text"
-                    name="search"
-                    value="{{ request('search') }}"
-                    placeholder="Search food..."
-                    class="flex-1 border rounded-lg px-5 py-3 focus:ring-2 focus:ring-red-500 outline-none">
+        <div class="flex gap-4">
 
+            <input
+                type="text"
+                name="search"
+                value="{{ request('search') }}"
+                placeholder="Search food..."
+                class="flex-1 border rounded-lg px-5 py-3 focus:ring-2 focus:ring-red-500 outline-none">
 
-                <button
-                    class="bg-red-600 hover:bg-red-700 text-white px-8 rounded-lg">
+            <button
+                class="bg-red-600 hover:bg-red-700 text-white px-8 rounded-lg">
 
-                    Search
+                Search
 
-                </button>
+            </button>
 
+        </div>
 
-            </div>
+    </form>
 
-        </form>
+</div>
 
-    </div>
 
 </section>
-
-
 
 <!-- Categories -->
 
 <section class="py-8 bg-gray-100">
 
-    <div class="max-w-7xl mx-auto px-6">
 
-        <div class="flex flex-wrap gap-3">
+<div class="max-w-7xl mx-auto px-6">
 
+    <div class="flex flex-wrap gap-3">
 
-            <a href="{{ route('menu') }}"
-               class="px-5 py-2 rounded-full bg-red-600 text-white">
+        <a href="{{ route('menu') }}"
+           class="px-5 py-2 rounded-full bg-red-600 text-white">
 
-                All
+            All
+
+        </a>
+
+        @foreach($categories as $category)
+
+            <a href="{{ route('category', $category) }}"
+               class="px-5 py-2 rounded-full bg-white hover:bg-red-600 hover:text-white shadow transition">
+
+                {{ $category->name }}
 
             </a>
 
-
-            @foreach($categories as $category)
-
-                <a href="{{ route('category',$category) }}"
-                   class="px-5 py-2 rounded-full bg-white hover:bg-red-600 hover:text-white shadow transition">
-
-                    {{ $category->name }}
-
-                </a>
-
-            @endforeach
-
-
-        </div>
+        @endforeach
 
     </div>
 
+</div>
+
+
 </section>
-
-
 
 <!-- Menu -->
 
 <section class="py-16">
 
-    <div class="max-w-7xl mx-auto px-6">
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+<div class="max-w-7xl mx-auto px-6">
 
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
 
-            @forelse($menuItems as $item)
+        @forelse($menuItems as $item)
 
+            <div
+                class="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition duration-300 flex flex-col h-full">
 
-                <div
-                    class="bg-white rounded-2xl overflow-hidden shadow hover:shadow-xl transition duration-300 flex flex-col h-full">
+                @if($item->image)
 
+                    <img
+                        src="{{ asset('storage/' . $item->image) }}"
+                        class="w-full h-56 object-cover object-center">
 
-                    @if($item->image)
+                @else
 
-                        <img
-                            src="{{ asset('storage/'.$item->image) }}"
-                            class="w-full h-56 object-cover object-center">
+                    <div
+                        class="h-56 bg-gray-200 flex items-center justify-center">
 
-                    @else
+                        <span class="text-gray-500">
 
-                        <div
-                            class="h-56 bg-gray-200 flex items-center justify-center">
+                            No Image
 
-                            <span class="text-gray-500">
+                        </span>
 
-                                No Image
+                    </div>
 
-                            </span>
-
-                        </div>
-
-                    @endif
-                                        <div class="p-5 flex flex-col flex-1">
+                @endif
 
 
-                        <div class="flex justify-between items-center mb-2">
+                <div class="p-5 flex flex-col flex-1">
+
+                    <div class="flex justify-between items-center mb-2">
+
+                        <h3 class="font-bold text-xl h-16">
+
+                            {{ $item->name }}
+
+                        </h3>
 
 
-                            <h3 class="font-bold text-xl h-16">
+                        @if($item->is_available)
 
-                                {{ $item->name }}
+                            <span
+                                class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
 
-                            </h3>
-
-
-
-                            @if($item->is_available)
-
-                                <span
-                                    class="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
-
-                                    Available
-
-                                </span>
-
-
-                            @else
-
-                                <span
-                                    class="bg-red-100 text-red-700 text-xs px-3 py-1 rounded-full">
-
-                                    Unavailable
-
-                                </span>
-
-
-                            @endif
-
-
-                        </div>
-
-
-
-                        <p class="text-gray-600 text-sm h-12 overflow-hidden">
-
-                            {{ Str::limit($item->description,60) }}
-
-                        </p>
-
-
-
-
-                        <div class="flex justify-between items-center mb-5 mt-4">
-
-
-                            <span class="text-2xl font-bold text-red-600">
-
-                                Rs. {{ number_format($item->price,2) }}
+                                Available
 
                             </span>
 
+                        @else
 
+                            <span
+                                class="bg-red-100 text-red-700 text-xs px-3 py-1 rounded-full">
 
-                            <span class="text-gray-500">
-
-                                ⏱ {{ $item->preparation_time }} min
+                                Unavailable
 
                             </span>
 
-
-                        </div>
-
-
-
-
-                        <div class="flex gap-2 mt-auto">
-
-
-                            <a href="{{ route('menu.show',$item) }}"
-                               class="flex-1 bg-gray-200 text-center py-2 rounded-lg hover:bg-gray-300">
-
-                                View
-
-                            </a>
-
-
-
-                            <form action="{{ route('cart.add',$item) }}" method="POST">
-
-
-                                @csrf
-
-
-                                <button
-                                    type="submit"
-                                    class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg">
-
-
-                                    Add
-
-
-                                </button>
-
-
-                            </form>
-
-
-
-                        </div>
-
+                        @endif
 
                     </div>
 
 
-                </div>
+                    <p class="text-gray-600 text-sm h-12 overflow-hidden">
+
+                        {{ Str::limit($item->description, 60) }}
+
+                    </p>
 
 
+                    <div class="flex justify-between items-center mb-5 mt-4">
 
-            @empty
+                        <span class="text-2xl font-bold text-red-600">
 
+                            Rs. {{ number_format($item->price, 2) }}
 
-                <div class="col-span-4 text-center py-16">
-
-
-                    <h2 class="text-2xl font-semibold">
-
-                        No Menu Items Available
-
-                    </h2>
+                        </span>
 
 
-                </div>
+                        <span class="text-gray-500">
 
+                            ⏱ {{ $item->preparation_time }} min
 
-            @endforelse
+                        </span>
+
                     </div>
 
 
-        <div class="mt-12">
+                    <div class="flex gap-2 mt-auto">
 
-            {{ $menuItems->links() }}
+                        <a href="{{ route('menu.show', $item) }}"
+                           class="flex-1 bg-gray-200 text-center py-2 rounded-lg hover:bg-gray-300">
 
-        </div>
+                            View
 
+                        </a>
+
+
+                        <form action="{{ route('cart.add', $item) }}" method="POST">
+
+                            @csrf
+
+                            <button
+                                type="submit"
+                                class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg">
+
+                                Add
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        @empty
+
+            <div class="col-span-4 text-center py-16">
+
+                <h2 class="text-2xl font-semibold">
+
+                    No Menu Items Available
+
+                </h2>
+
+            </div>
+
+        @endforelse
 
     </div>
 
-</section>
 
+    <div class="mt-12">
+
+        {{ $menuItems->links() }}
+
+    </div>
+
+</div>
+
+</section>
 
 @endsection
