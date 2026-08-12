@@ -8,6 +8,49 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
+    .rd-hero-height {
+    min-height: 360px;
+}
+
+.rd-hero-image {
+    height: 360px;
+    min-height: 360px;
+    max-height: 360px;
+}
+
+/* Plain-CSS fallback so image cropping/sizing cannot break
+   if the equivalent Tailwind utility classes are ever missing
+   from a production CSS build. */
+.rd-hero-image img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+@media (max-width: 1023px) {
+    .rd-hero-height {
+        min-height: 0;
+    }
+
+    .rd-hero-image {
+        height: 256px;
+        min-height: 256px;
+        max-height: 256px;
+    }
+}
+.rd-image-overlay {
+    background: linear-gradient(
+        to left,
+        transparent,
+        rgba(249, 115, 22, 0.4)
+    );
+}
     .rd-font-display { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; }
     .rd-font-body { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; }
 
@@ -99,7 +142,7 @@
         <div class="absolute -top-10 -right-10 w-56 h-56 bg-white/10 rounded-full rd-float" aria-hidden="true"></div>
         <div class="absolute bottom-0 left-1/3 w-32 h-32 bg-white/10 rounded-full rd-float" style="animation-delay:1.5s" aria-hidden="true"></div>
 
-        <div class="relative grid grid-cols-1 lg:grid-cols-5 items-center lg:min-h-90">
+        <div class="relative grid grid-cols-1 lg:grid-cols-5 items-center rd-hero-height">
 
             <div class="lg:col-span-3 p-8 sm:p-10 lg:p-12">
                 <span class="inline-flex items-center gap-2 text-xs font-semibold tracking-wide uppercase bg-white/20 text-white px-3 py-1 rounded-full backdrop-blur-sm">
@@ -127,7 +170,7 @@
                 </div>
             </div>
 
-            <div class="lg:col-span-2 h-64 lg:h-90 relative overflow-hidden lg:rounded-r-3xl">
+            <div class="lg:col-span-2 relative overflow-hidden lg:rounded-r-3xl rd-hero-image">
 
                 <img
                     src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80"
@@ -137,10 +180,10 @@
                     class="absolute inset-0 w-full h-full object-cover opacity-95"
                 >
 
-                <div
-                    class="absolute inset-0 bg-linear-to-l from-transparent to-orange-500/40"
-                    aria-hidden="true">
-                </div>
+               <div
+    class="absolute inset-0 rd-image-overlay"
+    aria-hidden="true">
+</div>
 
             </div>
 
