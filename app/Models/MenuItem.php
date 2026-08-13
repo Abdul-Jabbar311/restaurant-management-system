@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class MenuItem extends Model
 {
@@ -27,5 +28,18 @@ class MenuItem extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Ingredients used to prepare this menu item.
+     */
+    public function ingredients(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Ingredient::class,
+            'ingredient_menu_item'
+        )
+        ->withPivot('quantity')
+        ->withTimestamps();
     }
 }

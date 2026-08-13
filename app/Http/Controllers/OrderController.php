@@ -6,7 +6,11 @@ use App\Models\Order;
 use App\Models\Customer;
 use App\Models\RestaurantTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Services\ActivityLogService;
+use App\Models\MenuItem;
+use App\Models\OrderItem;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -23,58 +27,88 @@ class OrderController extends Controller
     }
 
     public function create()
-    {
-        $customers = Customer::all();
+{
+    $customers = Customer::all();
 
-        $tables = RestaurantTable::where('status', 'Available')->get();
+    $tables = RestaurantTable::where('status', 'Available')->get();
 
-        return view('orders.create', compact(
-            'customers',
-            'tables'
-        ));
+    $menuItems = MenuItem::where('is_available', true)
+        ->with('ingredients')
+        ->orderBy('name')
+        ->get();
+
+    return view('orders.create', compact(
+        'customers',
+        'tables',
+        'menuItems'
+    ));
+}
+
+ public function store(Request $request)
+{
+    $request->validate([
+        'restaurant_table_id' => 'required|exists:restaurant_tables,id',
+        'customer_id' => 'required|exists:customers,id',
+        'items' => 'required|array|min:1',
+        'items.*.menu_item_id' => 'required|exists:menu_items,id',
+        'items.*.quantity' => 'required|integer|min:1',
+    ]);
+
+    $table = RestaurantTable::findOrFail(
+        $request->restaurant_table_id
+    );
+
+    $totalAmount = 0;
+
+    foreach ($request->items as $item) {
+        $menuItem = MenuItem::findOrFail($item['menu_item_id']);
+
+        $quantity = (int) $item['quantity'];
+
+        $totalAmount += $menuItem->price * $quantity;
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'restaurant_table_id' => 'required|exists:restaurant_tables,id',
-            'customer_id' => 'required|exists:customers,id',
-            'total_amount' => 'required|numeric|min:0',
-        ]);
+    $order = Order::create([
+        'restaurant_table_id' => $request->restaurant_table_id,
+        'customer_id' => $request->customer_id,
+        'waiter_id' => Auth::id(),
+        'order_number' => 'ORD-' . time(),
+        'total_amount' => $totalAmount,
+        'status' => 'Pending',
+        'payment_status' => 'Unpaid',
+        'notes' => null,
+    ]);
 
-        $table = RestaurantTable::findOrFail(
-            $request->restaurant_table_id
+    foreach ($request->items as $item) {
+
+        $menuItem = MenuItem::findOrFail(
+            $item['menu_item_id']
         );
 
-        $order = Order::create([
-            'restaurant_table_id' => $request->restaurant_table_id,
-            'customer_id' => $request->customer_id,
-            'waiter_id' => auth()->id(),
-            'order_number' => 'ORD-' . time(),
-            'total_amount' => $request->total_amount,
-            'status' => 'Pending',
-            'payment_status' => 'Unpaid',
-            'notes' => null,
+        $quantity = (int) $item['quantity'];
+
+        $order->orderItems()->create([
+            'menu_item_id' => $menuItem->id,
+            'quantity' => $quantity,
+            'unit_price' => $menuItem->price,
+            'subtotal' => $menuItem->price * $quantity,
         ]);
-
-        // Mark table as occupied
-
-        $table->update([
-            'status' => 'Occupied'
-        ]);
-
-        ActivityLogService::log(
-            'Create',
-            'Orders',
-            'Created Order #' . $order->id
-        );
-
-        return redirect()
-            ->route('orders.index')
-            ->with('success', 'Order Created Successfully.');
     }
 
-    public function show(Order $order)
+    $table->update([
+        'status' => 'Occupied'
+    ]);
+
+    ActivityLogService::log(
+        'Create',
+        'Orders',
+        'Created Order #' . $order->id
+    );
+
+    return redirect()
+        ->route('orders.index')
+        ->with('success', 'Order Created Successfully.');
+}   public function show(Order $order)
     {
         $order->load([
             'customer',
@@ -126,41 +160,42 @@ class OrderController extends Controller
     }
 
     public function updateStatus(Order $order)
-{
-    switch ($order->status) {
+    {
+        switch ($order->status) {
 
-        case 'Pending':
-            $order->status = 'Preparing';
-            break;
+            case 'Pending':
+                $order->status = 'Preparing';
+                break;
 
-        case 'Preparing':
-            $order->status = 'Ready';
-            break;
+            case 'Preparing':
+                $order->status = 'Ready';
+                break;
 
-        case 'Ready':
-            $order->status = 'Delivered';
-            break;
+            case 'Ready':
+                $order->status = 'Delivered';
+                break;
 
-        default:
-            break;
+            default:
+                break;
+        }
+
+        $order->save();
+
+        ActivityLogService::log(
+            'Update',
+            'Orders',
+            'Changed status of Order #' .
+            $order->id .
+            ' to ' .
+            $order->status
+        );
+
+        return back()->with(
+            'success',
+            'Order status updated.'
+        );
     }
 
-    $order->save();
-
-    ActivityLogService::log(
-        'Update',
-        'Orders',
-        'Changed status of Order #' .
-        $order->id .
-        ' to ' .
-        $order->status
-    );
-
-    return back()->with(
-        'success',
-        'Order status updated.'
-    );
-}
     public function waiterOrders()
     {
         $orders = Order::with([
@@ -188,8 +223,6 @@ class OrderController extends Controller
         );
     }
 
-
-
     public function destroy(Order $order)
     {
         ActivityLogService::log(
@@ -208,64 +241,65 @@ class OrderController extends Controller
             );
     }
 
-   public function deliver(Order $order)
-{
-    $order->update([
-        'status' => 'Delivered'
-    ]);
-
-    if ($order->restaurantTable) {
-        $order->restaurantTable->update([
-            'status' => 'Available'
+    public function deliver(Order $order)
+    {
+        $order->update([
+            'status' => 'Delivered'
         ]);
+
+        if ($order->restaurantTable) {
+            $order->restaurantTable->update([
+                'status' => 'Available'
+            ]);
+        }
+
+        ActivityLogService::log(
+            'Update',
+            'Orders',
+            'Delivered Order #' . $order->id
+        );
+
+        return redirect()
+            ->route('waiter.dashboard')
+            ->with(
+                'success',
+                'Order delivered successfully.'
+            );
     }
 
-    ActivityLogService::log(
-        'Update',
-        'Orders',
-        'Delivered Order #' . $order->id
-    );
+    public function markAsPaid(Order $order)
+    {
+        $order->update([
+            'payment_status' => 'Paid'
+        ]);
 
-    return redirect()
-        ->route('waiter.dashboard')
-        ->with(
-            'success',
-            'Order delivered successfully.'
+        ActivityLogService::log(
+            'Update',
+            'Orders',
+            'Marked Order #' . $order->id . ' as Paid'
         );
-}
-   public function markAsPaid(Order $order)
-{
-    $order->update([
-        'payment_status' => 'Paid'
-    ]);
 
-    ActivityLogService::log(
-        'Update',
-        'Orders',
-        'Marked Order #' . $order->id . ' as Paid'
-    );
+        return back()->with(
+            'success',
+            'Order marked as paid successfully.'
+        );
+    }
 
-    return back()->with(
-        'success',
-        'Order marked as paid successfully.'
-    );
-}
-public function markPaid(Order $order)
-{
-    $order->update([
-        'payment_status' => 'Paid',
-    ]);
+    public function markPaid(Order $order)
+    {
+        $order->update([
+            'payment_status' => 'Paid',
+        ]);
 
-    ActivityLogService::log(
-        'Update',
-        'Orders',
-        'Marked Order #' . $order->id . ' as Paid'
-    );
+        ActivityLogService::log(
+            'Update',
+            'Orders',
+            'Marked Order #' . $order->id . ' as Paid'
+        );
 
-    return back()->with(
-        'success',
-        'Payment marked as Paid successfully.'
-    );
-}
-
+        return back()->with(
+            'success',
+            'Payment marked as Paid successfully.'
+        );
+    }
 }

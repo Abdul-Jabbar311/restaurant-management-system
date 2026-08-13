@@ -40,6 +40,8 @@ use App\Http\Controllers\WebsiteContentController;
 use App\Http\Controllers\EditableContentController;
 
 
+
+
 /*
 |--------------------------------------------------------------------------
 | CUSTOMER WEBSITE
@@ -472,7 +474,10 @@ Route::middleware('auth')->group(function () {
             ->name('editable-content.update');
 
     });
-
+Route::get(
+    '/kitchen-inventory',
+    [IngredientController::class, 'inventory']
+)->name('kitchen-inventory.index');
 
     /*
     |--------------------------------------------------------------------------

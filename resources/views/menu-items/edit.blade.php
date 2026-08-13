@@ -108,58 +108,118 @@
 
 <div class="mt-6">
 
-<label class="block mb-2 font-semibold">
+    <label class="block mb-2 font-semibold">
+        Description
+    </label>
 
-Description
-
-</label>
-
-<textarea
-name="description"
-rows="4"
-class="w-full border rounded p-2">{{ old('description', $menuItem->description) }}</textarea>
+    <textarea
+        name="description"
+        rows="4"
+        class="w-full border rounded p-2">{{ old('description', $menuItem->description) }}</textarea>
 
 </div>
 
 <div class="mt-6">
 
-<label class="block mb-2 font-semibold">
+    <label class="block mb-2 font-semibold">
+        Image
+    </label>
 
-Image
+    <input
+        type="file"
+        name="image"
+        class="w-full border rounded p-2">
 
-</label>
+    @if($menuItem->image)
 
-<input
-type="file"
-name="image"
-class="w-full border rounded p-2">
+        <img
+            src="{{ asset('storage/'.$menuItem->image) }}"
+            class="w-24 mt-4 rounded">
 
-@if($menuItem->image)
-
-<img
-src="{{ asset('storage/'.$menuItem->image) }}"
-class="w-24 mt-4 rounded">
-
-@endif
+    @endif
 
 </div>
 
+{{-- ========================================================= --}}
+{{-- RECIPE / INGREDIENTS --}}
+{{-- ========================================================= --}}
+
+<div class="mt-6 border-t pt-6">
+
+    <h2 class="text-xl font-bold mb-2">
+        Recipe / Ingredients
+    </h2>
+
+    <p class="text-gray-600 mb-4">
+        Enter how much of each ingredient is required to prepare one menu item.
+    </p>
+
+    <div class="space-y-3">
+
+        @foreach($ingredients as $ingredient)
+
+            @php
+                $existingIngredient = $menuItem->ingredients
+                    ->firstWhere('id', $ingredient->id);
+            @endphp
+
+            <div class="flex items-center gap-4 border rounded p-3">
+
+                <div class="w-1/3">
+
+                    <label class="font-semibold">
+                        {{ $ingredient->name }}
+                    </label>
+
+                    <span class="text-gray-500 text-sm">
+                        ({{ $ingredient->unit }})
+                    </span>
+
+                </div>
+
+                <div class="flex-1">
+
+                    <input
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        name="ingredients[{{ $ingredient->id }}][quantity]"
+                        value="{{ $existingIngredient?->pivot?->quantity }}"
+                        placeholder="Quantity"
+                        class="w-full border rounded px-3 py-2"
+                    >
+
+                </div>
+
+            </div>
+
+        @endforeach
+
+    </div>
+
+</div>
+
+{{-- ========================================================= --}}
+{{-- ACTION BUTTONS --}}
+{{-- ========================================================= --}}
+
 <div class="mt-6">
 
-<button
-type="submit"
-class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+    <button
+        type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
 
-Update Menu Item
+        Update Menu Item
 
-</button>
+    </button>
 
-<a href="{{ route('menu-items.index') }}"
-class="ml-3 bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded">
+    <a
+        href="{{ route('menu-items.index') }}"
+        class="ml-3 bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded">
 
-Cancel
+        Cancel
 
-</a>
+    </a>
 
 </div>
 

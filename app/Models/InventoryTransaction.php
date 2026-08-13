@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InventoryTransaction extends Model
 {
-    protected $fillable = [
-        'ingredient_id',
-        'transaction_type',
-        'quantity',
-        'reference',
-        'notes',
-    ];
+   protected $fillable = [
+    'ingredient_id',
+    'transaction_type',
+    'quantity',
+    'reference',
+    'notes',
+];
 
     public function ingredient(): BelongsTo
     {

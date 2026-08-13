@@ -8,20 +8,38 @@
         Kitchen Orders
     </h1>
 
-    <a href="{{ route('kitchen-orders.create') }}"
-       class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded">
-        + Add Kitchen Order
-    </a>
+    <div class="flex gap-3">
+
+        <!-- Kitchen Inventory -->
+        <a href="{{ url('/kitchen-inventory') }}"
+           class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded">
+            Kitchen Inventory
+        </a>
+
+        <!-- Add Kitchen Order -->
+        <a href="{{ route('kitchen-orders.create') }}"
+           class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded">
+            + Add Kitchen Order
+        </a>
+
+    </div>
 
 </div>
 
 @if(session('success'))
 
-<div class="bg-green-100 text-green-700 p-3 rounded mb-4">
+    <div class="bg-green-100 text-green-700 p-3 rounded mb-4">
+        {{ session('success') }}
+    </div>
 
-    {{ session('success') }}
+@endif
 
-</div>
+@if(session('error'))
+
+    <div class="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-4">
+        <strong>Error:</strong>
+        {{ session('error') }}
+    </div>
 
 @endif
 
@@ -54,9 +72,17 @@
 
             <tr>
 
-                <th class="p-3 text-left">Order ID</th>
-                <th class="p-3 text-left">Status</th>
-                <th class="p-3 text-center">Actions</th>
+                <th class="p-3 text-left">
+                    Order ID
+                </th>
+
+                <th class="p-3 text-left">
+                    Status
+                </th>
+
+                <th class="p-3 text-center">
+                    Actions
+                </th>
 
             </tr>
 
@@ -73,52 +99,96 @@
                 </td>
 
                 <td class="p-3">
-                    {{ $kitchenOrder->status }}
+
+                    @if($kitchenOrder->status == 'Pending')
+
+                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                            Pending
+                        </span>
+
+                    @elseif($kitchenOrder->status == 'Preparing')
+
+                        <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm">
+                            Preparing
+                        </span>
+
+                    @elseif($kitchenOrder->status == 'Ready')
+
+                        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
+                            Ready
+                        </span>
+
+                    @else
+
+                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                            {{ $kitchenOrder->status }}
+                        </span>
+
+                    @endif
+
                 </td>
 
                 <td class="p-3">
 
-                    <form action="{{ route('kitchen-orders.updateStatus', $kitchenOrder) }}" method="POST">
-
-                        @csrf
-                        @method('PATCH')
+                    <div class="flex justify-center">
 
                         @if($kitchenOrder->status == 'Pending')
 
-                            <input type="hidden" name="status" value="Preparing">
+                            <form
+                                action="{{ route('kitchen-orders.updateStatus', $kitchenOrder) }}"
+                                method="POST">
 
-                            <button
-                                class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded">
+                                @csrf
+                                @method('PATCH')
 
-                                Start Preparing
+                                <input
+                                    type="hidden"
+                                    name="status"
+                                    value="Preparing">
 
-                            </button>
+                                <button
+                                    type="submit"
+                                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded">
+
+                                    Start Preparing
+
+                                </button>
+
+                            </form>
 
                         @elseif($kitchenOrder->status == 'Preparing')
 
-                            <input type="hidden" name="status" value="Ready">
+                            <form
+                                action="{{ route('kitchen-orders.updateStatus', $kitchenOrder) }}"
+                                method="POST">
 
-                            <button
-                                class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
+                                @csrf
+                                @method('PATCH')
 
-                                Mark Ready
+                                <input
+                                    type="hidden"
+                                    name="status"
+                                    value="Ready">
 
-                            </button>
+                                <button
+                                    type="submit"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded">
 
-                        @else
+                                    Mark Ready
 
-                            <input type="hidden" name="status" value="Pending">
+                                </button>
 
-                            <button
-                                class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">
+                            </form>
 
-                                Reset
+                        @elseif($kitchenOrder->status == 'Ready')
 
-                            </button>
+                            <span class="text-green-600 font-semibold">
+                                Completed
+                            </span>
 
                         @endif
 
-                    </form>
+                    </div>
 
                 </td>
 
@@ -128,7 +198,9 @@
 
             <tr>
 
-                <td colspan="3" class="text-center p-6 text-gray-500">
+                <td
+                    colspan="3"
+                    class="text-center p-6 text-gray-500">
 
                     No Kitchen Orders Found.
 

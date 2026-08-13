@@ -8,28 +8,32 @@ use Illuminate\Http\Request;
 
 class IngredientController extends Controller
 {
-    public function index(Request $request)
-    {
-        $query = Ingredient::with('supplier');
+   public function index(Request $request)
+{
+    $query = Ingredient::with('supplier');
 
-        if ($request->filled('search')) {
+    if ($request->filled('search')) {
+        $query->where(function ($q) use ($request) {
 
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('supplier', function ($q) use ($request) {
+            $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhereHas('supplier', function ($supplier) use ($request) {
+                    $supplier->where(
+                        'name',
+                        'like',
+                        '%' . $request->search . '%'
+                    );
+                });
 
-                      $q->where('name', 'like', '%' . $request->search . '%');
-
-                  });
-
-        }
-
-        $ingredients = $query
-            ->latest()
-            ->paginate(10);
-
-        return view('ingredients.index', compact('ingredients'));
+        });
     }
 
+    $ingredients = $query
+        ->latest()
+        ->paginate(10)
+        ->withQueryString();
+
+    return view('ingredients.index', compact('ingredients'));
+}
     public function create()
     {
         $suppliers = Supplier::where('is_active', 1)->get();
@@ -105,4 +109,84 @@ class IngredientController extends Controller
             ->route('ingredients.index')
             ->with('success', 'Ingredient Deleted Successfully.');
     }
+    public function inventory(Request $request)
+{
+    $query = Ingredient::query()
+        ->where('is_active', true);
+
+    // Search
+    if ($request->filled('search')) {
+        $query->where(
+            'name',
+            'like',
+            '%' . $request->search . '%'
+        );
+    }
+
+    // Low-stock filter
+    if ($request->stock_status === 'low') {
+        $query->whereColumn(
+            'stock_quantity',
+            '<=',
+            'minimum_stock'
+        );
+    }
+
+    // Available-stock filter
+    if ($request->stock_status === 'available') {
+        $query->whereColumn(
+            'stock_quantity',
+            '>',
+            'minimum_stock'
+        );
+    }
+
+    $ingredients = $query
+        ->orderBy('name')
+        ->paginate(10)
+        ->withQueryString();
+
+    $totalIngredients = Ingredient::where(
+        'is_active',
+        true
+    )->count();
+
+    $lowStockIngredients = Ingredient::where(
+        'is_active',
+        true
+    )
+    ->whereColumn(
+        'stock_quantity',
+        '<=',
+        'minimum_stock'
+    )
+    ->count();
+
+    $outOfStockIngredients = Ingredient::where(
+        'is_active',
+        true
+    )
+    ->where('stock_quantity', '<=', 0)
+    ->count();
+
+    $totalInventoryValue = Ingredient::where(
+        'is_active',
+        true
+    )
+    ->selectRaw(
+        'SUM(stock_quantity * cost_per_unit) as total'
+    )
+    ->value('total') ?? 0;
+
+    return view(
+        'ingredients.inventory',
+        compact(
+            'ingredients',
+            'totalIngredients',
+            'lowStockIngredients',
+            'outOfStockIngredients',
+            'totalInventoryValue'
+        )
+    );
+}
 }
